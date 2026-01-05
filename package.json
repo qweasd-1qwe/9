@@ -1,0 +1,23 @@
+{
+  "name": "wallet-bill-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "react-native start",
+    "android": "react-native run-android",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx"
+  },
+  "dependencies": {
+    "react": "18.2.0",
+    "react-native": "0.71.10",
+    "papaparse": "^5.4.1",
+    "qrcode": "^1.5.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2",
+    "@types/react": "^18.2.21",
+    "@types/react-native": "^0.71.8"
+  }
+}
+
+
