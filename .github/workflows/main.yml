@@ -25,7 +25,7 @@ jobs:
           node-version: '18'
 
       - name: Install root npm deps
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Install Android SDK (cmdline-tools) and packages
         run: |
@@ -87,6 +87,5 @@ jobs:
       - name: Output link
         run: |
           echo "APK download URL: ${{ steps.compute_url.outputs.download_url }}"
-
 
 
