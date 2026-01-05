@@ -46,7 +46,33 @@ jobs:
 
       - name: Build Android debug APK
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+        run: |
+          echo "Listing android directory for debug:"
+          ls -la
+          if [ -f ./gradlew ]; then
+            echo "Found gradlew, setting executable permission"
+            chmod +x ./gradlew
+          else
+            echo "gradlew not found - attempting to install system gradle and generate wrapper"
+            sudo apt-get update
+            sudo apt-get install -y gradle
+            gradle -v || true
+            # generate wrapper using system gradle
+            if gradle wrapper --gradle-version 7.4.2; then
+              echo "Gradle wrapper generated"
+            else
+              echo "gradle wrapper failed; attempting without explicit version"
+              gradle wrapper || true
+            fi
+            if [ -f ./gradlew ]; then
+              chmod +x ./gradlew
+            else
+              echo "ERROR: gradlew still not present after trying to generate wrapper"
+              ls -la
+              exit 1
+            fi
+          fi
+          ./gradlew assembleDebug --no-daemon
 
       - name: Create GitHub Release
         id: create_release
