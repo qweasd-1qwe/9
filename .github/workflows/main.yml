@@ -1,0 +1,73 @@
+name: Build APK and Publish Release with QR
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install root npm deps
+        run: npm ci
+
+      - name: Build Android debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: apk-${{ github.sha }}
+          name: APK build ${{ github.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload APK to Release
+        id: upload_apk
+        uses: softprops/action-gh-release@v1
+        with:
+          files: android/app/build/outputs/apk/debug/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute download URL
+        id: compute_url
+        run: |
+          REPO="${{ github.repository }}"
+          TAG="apk-${{ github.sha }}"
+          FILE_NAME="app-debug.apk"
+          DOWNLOAD_URL="https://github.com/$REPO/releases/download/$TAG/$FILE_NAME"
+          echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
+
+      - name: Generate QR code image
+        run: node scripts/generate-qr.js "${{ steps.compute_url.outputs.download_url }}" "apk-qrcode.png"
+
+      - name: Upload QR to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: apk-qrcode.png
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Output link
+        run: echo "APK download URL: ${{ steps.compute_url.outputs.download_url }}"
+
+
